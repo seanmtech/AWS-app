@@ -1,43 +1,22 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
-import PageOne from './PageOne';
-import PageTwo from './PageTwo'; 
+import { Link } from 'react-router-dom';
 import './App.css';
 
 function App() {
   return (
-    <Router>
-      <div className="App">
-        <div className='content'>
-          <PageOne />
-          {/* <Switch>
-            <Route path="/PageOne">
-              <PageOne />
-            </Route>
-          </Switch> */}
-        </div>
-      </div>
-    </Router>
+    <div>
+      <h1>Caylent Practice App</h1>
+      <nav
+        style={{
+          borderBottom: "solid 1px",
+          paddingBottom: "1rem",
+        }}
+      >
+        <Link to="/PageOne">PageOne</Link> |{" "}
+        <Link to="/PageTwo">PageTwo</Link>
+      </nav>
+    </div>
   );
 }
 
 export default App;
-
-
-
-// <div className="App">
-// <header className="App-header">
-//   <img src={logo} className="App-logo" alt="logo" />
-//   <p>
-//     Edit <code>src/App.js</code> and save to reload.
-//   </p>
-//   <a
-//     className="App-link"
-//     href="https://reactjs.org"
-//     target="_blank"
-//     rel="noopener noreferrer"
-//   >
-//     Learn Amazing Things
-//   </a>
-// </header>
-// </div>
