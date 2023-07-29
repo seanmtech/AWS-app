@@ -139,6 +139,7 @@ async function deleteContact(productId) {
 
 function buildResponse(statusCode, body) {
   return {
+    isBase64Encoded: false,
     statusCode: statusCode,
     headers: {
       'Content-Type': 'application/json',
@@ -148,3 +149,5 @@ function buildResponse(statusCode, body) {
     body: JSON.stringify(body)
   }
 }
+
+
