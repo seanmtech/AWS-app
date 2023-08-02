@@ -49,7 +49,21 @@ resource "aws_lambda_function" "imageFunct" {
   role = aws_iam_role.imageLambdaRole.arn
 }
 
-// IAM Roles and Policies 
+  // Lambda for contacts processing
+
+resource "aws_lambda_function" "contactsFunct" {
+  function_name = "contactsFunct"
+
+  filename         = "contactsFunct_payload.zip"
+  source_code_hash = filebase64sha256("contactsFunct_payload.zip")
+  handler = "index.handler"
+
+  runtime = "nodejs16.x"
+
+  role = aws_iam_role.contactsLambdaRole.arn
+}
+
+// IAM Roles and Policy creation
   // IAM role for imageFunct Lambda
 resource "aws_iam_role" "imageLambdaRole" {
   name = "imageLambdaRole"
@@ -71,28 +85,47 @@ resource "aws_iam_role" "imageLambdaRole" {
 EOF
 }
 
-  // IAM policy for DynamoDB
-resource "aws_iam_policy" "dynamodb_access" {
-  name        = "dynamodb_access"
-  description = "Policy to allow Lambda to access DynamoDB table"
+  // IAM role for contactsFunct Lambda
+resource "aws_iam_role" "contactsLambdaRole" {
+  name = "contactsLambdaRole"
 
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Action = [
-          "dynamodb:GetItem",
-          "dynamodb:PutItem",
-          "dynamodb:UpdateItem",
-          "dynamodb:DeleteItem",
-          "dynamodb:Scan",
-          "dynamodb:Query"
-        ]
-        Effect   = "Allow"
-        Resource = "arn:aws:dynamodb:*:*:table/CaylentContactsApp"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
       },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+  // IAM policy document for api-gateway access
+data "aws_iam_policy_document" "api_gateway_access" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "apigateway:*",
     ]
-  })
+
+    resources = [
+      "*",
+    ]
+  }
+}
+
+  // IAM policy resource for api-gateway access
+resource "aws_iam_policy" "api_gateway_access_policy" {
+  name        = "ApiGatewayAccessPolicy"
+  description = "IAM policy for giving access to API Gateway"
+  policy      = data.aws_iam_policy_document.api_gateway_access.json
 }
 
   // block public access to image s3 bucket
@@ -131,4 +164,19 @@ resource "aws_iam_role_policy_attachment" "imageLambdaRole-attach" {
 resource "aws_iam_role_policy_attachment" "dynamodb-full-access" {
   role       = aws_iam_role.imageLambdaRole.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "dynamodb-full-access" {
+  role       = aws_iam_role.contactsLambdaRole.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "contactsLambdaRole-attach" {
+  role       = aws_iam_role.contactsLambdaRole.name
+  policy_arn = "arn:aws:iam::aws:policy/AWSLambdaExecute"
+}
+
+resource "aws_iam_role_policy_attachment" "contacts_lambda_api_gateway_access" {
+  role       = aws_iam_role.contactsLambdaRole.name
+  policy_arn = aws_iam_policy.api_gateway_access_policy.arn
 }
