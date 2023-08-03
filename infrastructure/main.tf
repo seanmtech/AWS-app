@@ -2,6 +2,13 @@ provider "aws" {
   region = "us-east-2"
 }
 
+module "api-gateway" {
+  source = "./modules/api-gateway"
+
+  imageFunct_lambda_arn = module.lambda.imageFunct_lambda_arn
+  contactsFunct_lambda_arn = module.lambda.contactsFunct_lambda_arn
+}
+
 module "s3" {
   source = "./modules/s3"
 }

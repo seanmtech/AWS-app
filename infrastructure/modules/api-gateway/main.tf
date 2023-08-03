@@ -1,128 +1,84 @@
+locals {
+  paths = [
+    {
+      name   = "contact"
+      parent = null
+      methods = ["OPTIONS", "POST"]
+    },
+    {
+      name   = "{id}"
+      parent = "contact"
+      methods = ["OPTIONS", "GET", "PUT", "DELETE"]
+    },
+    {
+      name   = "contacts"
+      parent = null
+      methods = ["OPTIONS", "GET"]
+    },
+    {
+      name   = "health"
+      parent = null
+      methods = ["OPTIONS", "GET"]
+    },
+    {
+      name   = "addImage"
+      parent = null
+      methods = ["OPTIONS", "POST"]
+    }
+  ]
+
+  path_methods = flatten([
+    for path in local.paths : [
+      for method in path.methods : {
+        name   = path.name
+        method = method
+        parent = path.parent
+      }
+    ]
+  ])
+}
+
 resource "aws_api_gateway_rest_api" "cay_api_gateway" {
   name        = "cay_api_gateway"
   description = "API Gateway for Caylent Practice app"
 }
 
-// ROUTE and METHOD declarations
-resource "aws_api_gateway_resource" "contact" {
+resource "aws_api_gateway_resource" "path" {
+  for_each = { for path in local.paths : path.name => path }
+
   rest_api_id = aws_api_gateway_rest_api.cay_api_gateway.id
-  parent_id   = aws_api_gateway_rest_api.cay_api_gateway.root_resource_id
-  path_part   = "contact"
+  parent_id   = each.value.parent != null ? aws_api_gateway_resource.path[each.value.parent].id : aws_api_gateway_rest_api.cay_api_gateway.root_resource_id
+  path_part   = each.value.name
 }
 
-resource "aws_api_gateway_method" "contact_options" {
+resource "aws_api_gateway_method" "method" {
+  for_each = {
+    for pm in local.path_methods : "${pm.name}_${pm.method}" => pm
+  }
+
   rest_api_id   = aws_api_gateway_rest_api.cay_api_gateway.id
-  resource_id   = aws_api_gateway_resource.contact.id
+  resource_id   = aws_api_gateway_resource.path[each.value.name].id
+  http_method   = each.value.method
+  authorization = "NONE"
+}
+
+# Add OPTIONS methods for each path to support CORS preflight
+resource "aws_api_gateway_method" "options" {
+  for_each = { for path in local.paths : path.name => path }
+
+  rest_api_id   = aws_api_gateway_rest_api.cay_api_gateway.id
+  resource_id   = aws_api_gateway_resource.path[each.key].id
   http_method   = "OPTIONS"
   authorization = "NONE"
 }
 
-resource "aws_api_gateway_method" "contact_post" {
-  rest_api_id   = aws_api_gateway_rest_api.cay_api_gateway.id
-  resource_id   = aws_api_gateway_resource.contact.id
-  http_method   = "POST"
-  authorization = "NONE"
-}
+# Define method responses for the OPTIONS methods (CORS preflight)
+resource "aws_api_gateway_method_response" "preflight" {
+  for_each = { for path in local.paths : path.name => path }
 
-resource "aws_api_gateway_resource" "contact_id" {
   rest_api_id = aws_api_gateway_rest_api.cay_api_gateway.id
-  parent_id   = aws_api_gateway_resource.contact.id
-  path_part   = "{id}"
-}
-
-resource "aws_api_gateway_method" "contact_id_get" {
-  rest_api_id   = aws_api_gateway_rest_api.cay_api_gateway.id
-  resource_id   = aws_api_gateway_resource.contact_id.id
-  http_method   = "GET"
-  authorization = "NONE"
-}
-
-resource "aws_api_gateway_method" "contact_id_put" {
-  rest_api_id   = aws_api_gateway_rest_api.cay_api_gateway.id
-  resource_id   = aws_api_gateway_resource.contact_id.id
-  http_method   = "PUT"
-  authorization = "NONE"
-}
-
-resource "aws_api_gateway_method" "contact_id_delete" {
-  rest_api_id   = aws_api_gateway_rest_api.cay_api_gateway.id
-  resource_id   = aws_api_gateway_resource.contact_id.id
-  http_method   = "DELETE"
-  authorization = "NONE"
-}
-
-resource "aws_api_gateway_method" "contact_id_options" {
-  rest_api_id   = aws_api_gateway_rest_api.cay_api_gateway.id
-  resource_id   = aws_api_gateway_resource.contact_id.id
-  http_method   = "OPTIONS"
-  authorization = "NONE"
-}
-
-resource "aws_api_gateway_resource" "contacts" {
-  rest_api_id = aws_api_gateway_rest_api.cay_api_gateway.id
-  parent_id   = aws_api_gateway_rest_api.cay_api_gateway.root_resource_id
-  path_part   = "contacts"
-}
-
-resource "aws_api_gateway_method" "contacts_get" {
-  rest_api_id   = aws_api_gateway_rest_api.cay_api_gateway.id
-  resource_id   = aws_api_gateway_resource.contacts.id
-  http_method   = "GET"
-  authorization = "NONE"
-}
-
-resource "aws_api_gateway_method" "contacts_options" {
-  rest_api_id   = aws_api_gateway_rest_api.cay_api_gateway.id
-  resource_id   = aws_api_gateway_resource.contacts.id
-  http_method   = "OPTIONS"
-  authorization = "NONE"
-}
-
-resource "aws_api_gateway_resource" "health" {
-  rest_api_id = aws_api_gateway_rest_api.cay_api_gateway.id
-  parent_id   = aws_api_gateway_rest_api.cay_api_gateway.root_resource_id
-  path_part   = "health"
-}
-
-resource "aws_api_gateway_method" "health_get" {
-  rest_api_id = aws_api_gateway_rest_api.cay_api_gateway.id
-  parent_id   = aws_api_gateway_rest_api.cay_api_gateway.root_resource_id
-  http_method   = "GET"
-  authorization = "NONE"
-}
-
-resource "aws_api_gateway_method" "health_options" {
-  rest_api_id = aws_api_gateway_rest_api.cay_api_gateway.id
-  parent_id   = aws_api_gateway_rest_api.cay_api_gateway.root_resource_id
-  http_method   = "OPTIONS"
-  authorization = "NONE"
-}
-
-resource "aws_api_gateway_resource" "addImage" {
-  rest_api_id = aws_api_gateway_rest_api.cay_api_gateway.id
-  parent_id   = aws_api_gateway_rest_api.cay_api_gateway.root_resource_id
-  path_part   = "addImage"
-}
-
-resource "aws_api_gateway_method" "addImage_post" {
-  rest_api_id = aws_api_gateway_rest_api.cay_api_gateway.id
-  parent_id   = aws_api_gateway_rest_api.cay_api_gateway.root_resource_id
-  http_method   = "POST"
-  authorization = "NONE"
-}
-
-resource "aws_api_gateway_method" "addImage_options" {
-  rest_api_id = aws_api_gateway_rest_api.cay_api_gateway.id
-  parent_id   = aws_api_gateway_rest_api.cay_api_gateway.root_resource_id
-  http_method   = "OPTIONS"
-  authorization = "NONE"
-}
-
-# CORS configuration
-resource "aws_api_gateway_method_response" "contact_200_response" {
-  rest_api_id = aws_api_gateway_rest_api.cay_api_gateway.id
-  resource_id = aws_api_gateway_resource.contact.id
-  http_method = aws_api_gateway_method.contact_options.http_method
+  resource_id = aws_api_gateway_resource.path[each.key].id
+  http_method = aws_api_gateway_method.options[each.key].http_method
   status_code = "200"
 
   response_parameters = {
@@ -132,56 +88,50 @@ resource "aws_api_gateway_method_response" "contact_200_response" {
   }
 }
 
-resource "aws_api_gateway_method_response" "contact_id_200_response" {
+# Define integration responses for the OPTIONS methods (CORS preflight)
+resource "aws_api_gateway_integration_response" "preflight" {
+  for_each = { for path in local.paths : path.name => path }
+
   rest_api_id = aws_api_gateway_rest_api.cay_api_gateway.id
-  resource_id = aws_api_gateway_resource.contact_id.id
-  http_method = aws_api_gateway_method.contact_options.http_method
+  resource_id = aws_api_gateway_resource.path[each.key].id
+  http_method = aws_api_gateway_method.options[each.key].http_method
+  status_code = aws_api_gateway_method_response.preflight[each.key].status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+    "method.response.header.Access-Control-Allow-Methods" = "'POST,GET,OPTIONS,PUT,DELETE'",
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+}
+
+# Define method responses for the actual methods
+resource "aws_api_gateway_method_response" "actual" {
+  for_each = {
+    for pm in local.path_methods : "${pm.name}_${pm.method}" => pm
+  }
+
+  rest_api_id = aws_api_gateway_rest_api.cay_api_gateway.id
+  resource_id = aws_api_gateway_resource.path[each.value.name].id
+  http_method = aws_api_gateway_method.method[each.key].http_method
   status_code = "200"
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = true,
-    "method.response.header.Access-Control-Allow-Methods" = true,
-    "method.response.header.Access-Control-Allow-Origin"  = true,
+    "method.response.header.Access-Control-Allow-Origin" = true
   }
 }
 
-# You'll need a similar configuration for every method in your API
-resource "aws_api_gateway_integration" "contact_options" {
-  rest_api_id = aws_api_gateway_rest_api.cay_api_gateway.id
-  resource_id = aws_api_gateway_resource.contact.id
-  http_method = aws_api_gateway_method.contact_options.http_method
-  type        = "MOCK"
-}
-
-resource "aws_api_gateway_integration" "contact_id_options" {
-  rest_api_id = aws_api_gateway_rest_api.cay_api_gateway.id
-  resource_id = aws_api_gateway_resource.contact_id.id
-  http_method = aws_api_gateway_method.contact_options.http_method
-  type        = "MOCK"
-}
-
-resource "aws_api_gateway_integration_response" "contact_options_response" {
-  rest_api_id = aws_api_gateway_rest_api.cay_api_gateway.id
-  resource_id = aws_api_gateway_resource.contact.id
-  http_method = aws_api_gateway_method.contact_options.http_method
-  status_code = aws_api_gateway_method_response.contact_200_response.status_code
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
-    "method.response.header.Access-Control-Allow-Methods" = "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'",
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+# Define integration responses for the actual methods
+resource "aws_api_gateway_integration_response" "actual" {
+  for_each = {
+    for pm in local.path_methods : "${pm.name}_${pm.method}" => pm
   }
-}
 
-resource "aws_api_gateway_integration_response" "contact_id_options_response" {
   rest_api_id = aws_api_gateway_rest_api.cay_api_gateway.id
-  resource_id = aws_api_gateway_resource.contact_id.id
-  http_method = aws_api_gateway_method.contact_options.http_method
-  status_code = aws_api_gateway_method_response.contact_id_200_response.status_code
+  resource_id = aws_api_gateway_resource.path[each.value.name].id
+  http_method = aws_api_gateway_method.method[each.key].http_method
+  status_code = aws_api_gateway_method_response.actual[each.key].status_code
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
-    "method.response.header.Access-Control-Allow-Methods" = "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'",
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+    "method.response.header.Access-Control-Allow-Origin" = "'*'"
   }
 }
