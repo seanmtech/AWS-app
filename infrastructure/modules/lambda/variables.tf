@@ -32,3 +32,8 @@ variable "image_bucket_id" {
   description = "The ID of the image bucket"
   type        = string
 }
+
+variable "cay_api_gateway_execution_arn" {
+  description = "The ARN of the API Gateway Execution Role"
+  type        = string
+}
