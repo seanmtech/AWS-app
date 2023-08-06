@@ -17,3 +17,8 @@ variable "contactsFunct_lambda_name" {
   description = "The name of the contactsFunct Lambda"
   type        = string
 }
+
+variable "cloudfront_distribution_url" {
+  description = "The URL of the CloudFront distribution"
+  type        = string
+}

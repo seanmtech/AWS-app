@@ -9,10 +9,13 @@ module "api-gateway" {
   contactsFunct_lambda_arn = module.lambda.contactsFunct_lambda_arn
   imageFunct_lambda_name = module.lambda.imageFunct_lambda_name
   contactsFunct_lambda_name = module.lambda.contactsFunct_lambda_name
+  cloudfront_distribution_url = module.cloudfront.cloudfront_distribution_url
 }
 
 module "s3" {
   source = "./modules/s3"
+
+  cloudfront_distribution_url = module.cloudfront.cloudfront_distribution_url
 }
 
 module "dynamodb" {
@@ -34,4 +37,20 @@ module "lambda" {
 
 module "iam" {
   source = "./modules/iam"
+
+  frontend_bucket_arn = module.s3.frontend_bucket_arn
+  frontend_bucket_id = module.s3.frontend_bucket_id
+}
+
+module "codebuild" {
+  source = "./modules/codebuild"
+
+  codebuildRole_arn = module.iam.codebuildRole_arn
+  codebuildRole_name = module.iam.codebuildRole_name
+}
+
+module "cloudfront" {
+  source = "./modules/cloudfront"
+
+  frontend_regional_domain_name = module.s3.frontend_regional_domain_name
 }

@@ -22,3 +22,13 @@ output "imageLambdaRole_name" {
   description = "The name of the IAM role for the image processing Lambda function"
   value       = aws_iam_role.imageLambdaRole.name
 }
+
+output "codebuildRole_arn" {
+  description = "The ARN of the IAM role for CodeBuild"
+  value       = aws_iam_role.codebuild_role.arn
+}
+
+output "codebuildRole_name" {
+  description = "The name of the IAM role for CodeBuild"
+  value       = aws_iam_role.codebuild_role.name
+}
