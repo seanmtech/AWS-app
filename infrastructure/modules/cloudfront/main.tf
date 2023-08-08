@@ -4,7 +4,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     origin_id   = "S3Origin"
 
     s3_origin_config {
-      origin_access_identity = "origin-access-identity/cloudfront/YOUR_IDENTITY"
+      origin_access_identity = aws_cloudfront_origin_access_identity.s3_front_end_OAI.cloudfront_access_identity_path
     }
   }
 
@@ -12,6 +12,17 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   is_ipv6_enabled     = true
   comment             = "CloudFront Distribution for React App"
   default_root_object = "index.html"
+
+  viewer_certificate {
+  cloudfront_default_certificate = true
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
 
   default_cache_behavior {
     allowed_methods  = ["GET", "HEAD"]
@@ -32,5 +43,8 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     default_ttl            = 3600
     max_ttl                = 86400
   }
+}
 
+resource "aws_cloudfront_origin_access_identity" "s3_front_end_OAI" {
+  comment = "OAI for CloudFront distribution"
 }

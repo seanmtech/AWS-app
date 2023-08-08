@@ -15,7 +15,7 @@ module "api-gateway" {
 module "s3" {
   source = "./modules/s3"
 
-  cloudfront_distribution_url = module.cloudfront.cloudfront_distribution_url
+  # cloudfront_distribution_url = module.cloudfront.cloudfront_distribution_url
 }
 
 module "dynamodb" {
@@ -40,6 +40,7 @@ module "iam" {
 
   frontend_bucket_arn = module.s3.frontend_bucket_arn
   frontend_bucket_id = module.s3.frontend_bucket_id
+  cloudfront_oai_arn = module.cloudfront.cloudfront_oai_arn
 }
 
 module "codebuild" {

@@ -20,22 +20,25 @@ resource "aws_s3_bucket_public_access_block" "access_block" {
 resource "aws_s3_bucket" "cay-frontend-bucket" {
   bucket = "cay-frontend-bucket"
   acl    = "private" 
-
-  website {
-    index_document = "index.html"
-    error_document = "error.html"
-  }
   
-   cors_rule {
-    allowed_headers = ["*"] 
+  cors_rule {
+    allowed_headers = ["*"]
     allowed_methods = ["GET", "HEAD"]
-    allowed_origins = [var.cloudfront_distribution_url]
+    allowed_origins = ["*"]
     max_age_seconds = 3000
   }
 
   tags = {
     Name        = "cay-frontend-bucket"
     Environment = "Dev"
+  }
+}
+
+resource "aws_s3_bucket_website_configuration" "cay_frontend_website_config" {
+  bucket = aws_s3_bucket.cay-frontend-bucket.bucket
+
+  index_document {
+    suffix = "index.html"
   }
 }
 

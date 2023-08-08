@@ -114,11 +114,11 @@ resource "aws_iam_role_policy_attachment" "codebuild_s3_upload_attachment" {
 data "aws_iam_policy_document" "s3_bucket_policy" {
   statement {
     actions   = ["s3:GetObject"]
-    resources = ["${aws_s3_bucket.cay-frontend-bucket.arn}/*"]
+    resources = ["${var.frontend_bucket_arn}/*"]
 
     principals {
       type        = "AWS"
-      identifiers = ["arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity YOUR_CLOUDFRONT_ORIGIN_ACCESS_IDENTITY"]
+      identifiers = [var.cloudfront_oai_arn]
     }
   }
 }

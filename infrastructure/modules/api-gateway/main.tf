@@ -84,7 +84,12 @@ resource "aws_api_gateway_method" "id_delete" {
   http_method   = "DELETE"
   authorization = "NONE"
 }
-
+resource "aws_api_gateway_method" "id_options" {
+  rest_api_id   = aws_api_gateway_rest_api.cay_api_gateway.id
+  resource_id   = aws_api_gateway_resource.id.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
 
 
 # Add OPTIONS methods for each path to support CORS preflight
@@ -112,7 +117,7 @@ resource "aws_api_gateway_method_response" "preflight" {
     "method.response.header.Access-Control-Allow-Origin"  = true,
   }
 }
-// create MOCK integrations for options methods
+// create MOCK integrations for options methods (for dynamic block, NOT {id})
 resource "aws_api_gateway_integration" "options" {
   for_each = { for path in local.paths : path.name => path }
 
@@ -122,8 +127,16 @@ resource "aws_api_gateway_integration" "options" {
   type        = "MOCK"
 }
 
+// create MOCK integrations for options methods (for {id})
+resource "aws_api_gateway_integration" "contact_id_options_integration" {
+  rest_api_id = aws_api_gateway_rest_api.cay_api_gateway.id
+  resource_id = aws_api_gateway_resource.id.id
+  http_method = aws_api_gateway_method.id_options.http_method
+  type        = "MOCK"
+}
 
-# Define integration responses for the OPTIONS methods (CORS preflight)
+
+# Define integration responses for the OPTIONS methods (CORS preflight) - for dynamic block, NOT {id}
 resource "aws_api_gateway_integration_response" "preflight" {
   for_each = { for path in local.paths : path.name => path }
 
@@ -138,6 +151,37 @@ resource "aws_api_gateway_integration_response" "preflight" {
     "method.response.header.Access-Control-Allow-Origin"  = "'*'"
   }
 }
+
+// integration responses for the OPTIONS method for /contact/{id} (because it's not being made dynamically for now)
+resource "aws_api_gateway_integration_response" "contact_id_options_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.cay_api_gateway.id
+  resource_id = aws_api_gateway_resource.id.id
+  http_method = aws_api_gateway_method.id_options.http_method
+  status_code = aws_api_gateway_method_response.contact_id_options_response.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+    "method.response.header.Access-Control-Allow-Methods" = "'POST,GET,OPTIONS,PUT,DELETE'",
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+}
+
+# Define method responses for the OPTIONS method for /contact/{id} (because it's not being made dynamically for now)
+resource "aws_api_gateway_method_response" "contact_id_options_response" {
+  rest_api_id = aws_api_gateway_rest_api.cay_api_gateway.id
+  resource_id = aws_api_gateway_resource.id.id
+  http_method = aws_api_gateway_method.id_options.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true,
+    "method.response.header.Access-Control-Allow-Methods" = true,
+    "method.response.header.Access-Control-Allow-Origin"  = true,
+  }
+}
+
+# Define integration responses for the OPTIONS method for /contact/{id} (because it's not being made dynamically for now)
+
 
 # Define method responses for the methods in local variable (not {id})
 resource "aws_api_gateway_method_response" "actual" {
