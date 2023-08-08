@@ -213,6 +213,13 @@ resource "aws_api_gateway_integration_response" "actual" {
   response_parameters = {
     "method.response.header.Access-Control-Allow-Origin" = "'*'"
   }
+
+  depends_on = [
+    aws_api_gateway_integration.contact_POST,
+    aws_api_gateway_integration.addImage_POST,
+    aws_api_gateway_integration.health_GET,
+    aws_api_gateway_integration.contacts_GET
+  ]
 }
 
 // manually define method responses for {id} methods
@@ -250,14 +257,29 @@ resource "aws_api_gateway_method_response" "contact_id_delete" {
   }
 }
 
-resource "aws_api_gateway_integration" "contact_post" {
+// create gateway integrations for routes in local variable
+# resource "aws_api_gateway_integration" "locals_variable_api_integration" {
+#   for_each = {
+#     for pm in local.path_methods : "${pm.name}_${pm.method}" => pm
+#   }
+
+#   rest_api_id = aws_api_gateway_rest_api.cay_api_gateway.id
+#   resource_id = aws_api_gateway_resource.path[each.value.name].id
+#   http_method = each.value.method
+  
+#   integration_http_method = each.value.method
+#   type                    = "AWS_PROXY"
+#   uri                     = each.value.name == "addImage" ? var.imageFunct_lambda_arn : var.contactsFunct_lambda_arn
+# }
+
+resource "aws_api_gateway_integration" "contact_POST" {
   rest_api_id = aws_api_gateway_rest_api.cay_api_gateway.id
   resource_id = aws_api_gateway_resource.path["contact"].id
   http_method = aws_api_gateway_method.method["contact_POST"].http_method
   
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
-  uri                     = var.contactsFunct_lambda_arn
+  uri                     = "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/${var.contactsFunct_lambda_arn}/invocations"
 }
 // manually define integration responses for {id} methods
 resource "aws_api_gateway_integration" "contact_id_get" {
@@ -267,7 +289,7 @@ resource "aws_api_gateway_integration" "contact_id_get" {
   
   integration_http_method = "GET"
   type                    = "AWS_PROXY"
-  uri                     = var.contactsFunct_lambda_arn
+  uri                     = "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/${var.contactsFunct_lambda_arn}/invocations"
 }
 
 resource "aws_api_gateway_integration" "contact_id_put" {
@@ -277,7 +299,7 @@ resource "aws_api_gateway_integration" "contact_id_put" {
   
   integration_http_method = "PUT"
   type                    = "AWS_PROXY"
-  uri                     = var.contactsFunct_lambda_arn
+  uri                     = "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/${var.contactsFunct_lambda_arn}/invocations"
 }
 
 resource "aws_api_gateway_integration" "contact_id_delete" {
@@ -287,27 +309,37 @@ resource "aws_api_gateway_integration" "contact_id_delete" {
   
   integration_http_method = "DELETE"
   type                    = "AWS_PROXY"
-  uri                     = var.contactsFunct_lambda_arn
+  uri                     = "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/${var.contactsFunct_lambda_arn}/invocations"
 }
 
-resource "aws_api_gateway_integration" "contacts_get" {
+resource "aws_api_gateway_integration" "contacts_GET" {
   rest_api_id = aws_api_gateway_rest_api.cay_api_gateway.id
   resource_id = aws_api_gateway_resource.path["contacts"].id
   http_method = aws_api_gateway_method.method["contacts_GET"].http_method
   
   integration_http_method = "GET"
   type                    = "AWS_PROXY"
-  uri                     = var.contactsFunct_lambda_arn
+  uri                     = "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/${var.contactsFunct_lambda_arn}/invocations"
+}
+resource "aws_api_gateway_integration" "health_GET" {
+  rest_api_id = aws_api_gateway_rest_api.cay_api_gateway.id
+  resource_id = aws_api_gateway_resource.path["health"].id
+  http_method = aws_api_gateway_method.method["health_GET"].http_method
+  
+  integration_http_method = "GET"
+  type                    = "AWS_PROXY"
+  uri                     = "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/${var.contactsFunct_lambda_arn}/invocations"
 }
 
-resource "aws_api_gateway_integration" "addImage_post" {
+resource "aws_api_gateway_integration" "addImage_POST" {
   rest_api_id = aws_api_gateway_rest_api.cay_api_gateway.id
   resource_id = aws_api_gateway_resource.path["addImage"].id
   http_method = aws_api_gateway_method.method["addImage_POST"].http_method
   
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
-  uri                     = var.imageFunct_lambda_arn
+  uri = "arn:aws:apigateway:us-east-2:lambda:path/2015-03-31/functions/${var.imageFunct_lambda_arn}/invocations"
+
 }
 
 resource "aws_api_gateway_deployment" "cay_api_gateway_deployment" {
