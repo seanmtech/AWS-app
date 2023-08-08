@@ -18,11 +18,11 @@ exports.handler = async (event, context) => {
 
     // Upload the cropped image to S3 bucket
     const params = {
-      Bucket: 'your-s3-bucket-name',
+      Bucket: 'caylent-image-bucket1',
       Key: 'path/to/cropped-image.jpg', // TODO Set file path
       Body: croppedImageBuffer,
       ACL: 'public-read', 
-      ContentType: 'image/jpeg', // add PNG to this too somehow?
+      ContentType: 'image/jpeg', // add .PNG to this too somehow?
     };
 
     await s3.upload(params).promise();
