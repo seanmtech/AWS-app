@@ -83,10 +83,8 @@ resource "aws_iam_role" "codebuild_role" {
   })
 }
 
-  
-  
   // policy for CodeBuild to access S3 bucket for frontend
-    // TODO - integrate with CodeBuild later
+    // integrate with CodeBuild to automate deployment
 resource "aws_iam_policy" "codebuild_s3_upload_policy" {
   name        = "CodeBuildS3UploadPolicy"
   description = "Allows CodeBuild to upload to the S3 bucket"

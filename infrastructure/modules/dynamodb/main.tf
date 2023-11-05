@@ -1,6 +1,6 @@
 // DynamoDB table for contacts
-resource "aws_dynamodb_table" "CaylentContactsApp" {
-  name           = "CaylentContactsApp"
+resource "aws_dynamodb_table" "AWSContactsApp" {
+  name           = "AWSContactsApp"
   billing_mode   = "PROVISIONED"
   read_capacity  = 20
   write_capacity = 20
@@ -17,7 +17,7 @@ resource "aws_dynamodb_table" "CaylentContactsApp" {
   }
 
   tags = {
-    Name        = "CaylentContactsApp"
+    Name        = "AWSContactsApp"
     Environment = "Dev"
   }
 }

@@ -5,7 +5,7 @@ import './App.css';
 function App() {
   return (
     <div>
-      <h1>Caylent Practice App</h1>
+      <h1>AWS Contacts App</h1>
       <nav
         style={{
           borderBottom: "solid 1px",

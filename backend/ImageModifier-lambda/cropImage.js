@@ -5,7 +5,7 @@ const s3 = new AWS.S3();
 
 exports.handler = async (event, context) => {
 
-  // TODO: write metadata to dynamodb as well to link users with both uploaded and edited images
+  // write metadata to dynamodb as well to link users with both uploaded and edited images
 
   try {
     // Retrieve the image file from the event payload (assuming it's in the 'image' key)
@@ -18,8 +18,8 @@ exports.handler = async (event, context) => {
 
     // Upload the cropped image to S3 bucket
     const params = {
-      Bucket: 'caylent-image-bucket1',
-      Key: 'path/to/cropped-image.jpg', // TODO Set file path
+      Bucket: 'image-bucket1',
+      Key: 'path/to/cropped-image.jpg', // Set file path
       Body: croppedImageBuffer,
       ACL: 'public-read', 
       ContentType: 'image/jpeg', // add .PNG to this too somehow?
