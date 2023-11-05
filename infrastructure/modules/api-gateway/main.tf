@@ -35,7 +35,7 @@ locals {
 
 resource "aws_api_gateway_rest_api" "cay_api_gateway" {
   name        = "cay_api_gateway"
-  description = "API Gateway for Caylent Practice app"
+  description = "API Gateway for AWS Contact app"
 }
 
 // use dynamic block to create resources for each path EXCEPT /contact/{id}
